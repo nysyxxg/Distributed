@@ -64,13 +64,14 @@ public class Proposer implements Runnable{
     @Override public void run() {
         int halfCount = ((int) acceptors.size() / 2) + 1;
         while (true) {
-            System.out.println(name + " round   " + (round++) + "   " + JSON.toJSONString(proposal));
+            round++;
+            System.out.println(name + " round   " + (round) + "   " + JSON.toJSONString(proposal));
             List<Acceptor> onPrepareSuccess = new ArrayList<Acceptor>();
             HashMap<Proposal, Integer> ProposalCount = new HashMap<>();
             for (Acceptor acceptor : acceptors) {
                 Promise prepareResult = acceptor.onPrepare(proposal);
                 if (prepareResult != null) {
-                    System.out.println(name + " round   " + (round++) + "   " + JSON.toJSONString(prepareResult));
+                    System.out.println(name + " round   " + (round) + "   " + JSON.toJSONString(prepareResult));
                     if (prepareResult.isAcctped()) {
                         //决策者已经接受该提议
                         onPrepareSuccess.add(acceptor);

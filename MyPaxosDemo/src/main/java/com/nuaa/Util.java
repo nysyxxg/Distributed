@@ -12,7 +12,7 @@ public class Util {
 
     public  static Proposal nextProposal(Proposal proposal){
         int serialid = proposal.getSerialId()+1;
-        return new Proposal(serialid,proposal.getSubject());
+        return new Proposal(serialid,proposal.getSubject(),proposal.getName());
 
     }
 }

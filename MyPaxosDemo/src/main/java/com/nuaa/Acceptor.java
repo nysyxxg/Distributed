@@ -9,10 +9,9 @@ import com.nuaa.bean.Proposal;
  * Created by wangjiuyong on 2017/7/20.
  */
 public class Acceptor {
-    private Proposal lastPrePare = new Proposal(0, null);
+    private Proposal lastPrePare = new Proposal(0, null,null);
     private boolean isAccepted;
     private Proposal acceptedProposal;
-
     private String name;
 
     public Acceptor(String name) {

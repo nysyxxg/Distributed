@@ -9,9 +9,20 @@ public class Proposal {
 
     private int serialId;
 
-    public  Proposal(int serialId, String subject) {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public  Proposal(int serialId, String subject,String name) {
         this.serialId = serialId;
         this.subject = subject;
+        this.name=name;
     }
 
 
@@ -39,7 +50,7 @@ public class Proposal {
         }
         if(o instanceof Proposal){
             Proposal obj =(Proposal)o;
-            if(this.subject.equals(obj.getSubject())&&this.getSerialId()==obj.getSerialId()){
+            if(this.subject.equals(obj.getSubject())&&this.getSerialId()==obj.getSerialId()&&this.getName().equals(obj.getName())){
                 return true;
             }
             else{
@@ -51,6 +62,6 @@ public class Proposal {
 
     @Override
     public int hashCode(){
-        return subject.hashCode()+serialId;
+        return subject.hashCode()+name.hashCode()+serialId;
     }
 }

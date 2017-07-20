@@ -25,9 +25,10 @@ public class Main {
         ExecutorService es = Executors.newFixedThreadPool(10);
         for(String subject:PROPOSALS) {
             Proposer proposer=new Proposer();
-            proposer.setName("proposer"+(i++));
+            String name="proposer"+(i++);
+            proposer.setName(name);
             proposer.setAcceptors(acceptors);
-            proposer.setProposal(new Proposal(1, subject));
+            proposer.setProposal(new Proposal(1, subject,name));
             es.submit(proposer);
         }
     }
