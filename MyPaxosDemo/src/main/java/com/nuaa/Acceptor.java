@@ -28,24 +28,27 @@ public class Acceptor {
         if (proposal == null)
             throw new IllegalArgumentException("null proposal");
 
-        if(!isAccepted) {
+        if (!isAccepted) {
             //当前没有确认
-            System.out.println(name + "   Para proposal " + JSON.toJSONString(proposal)
-                + "     lastPrePare proposal " + JSON.toJSONString(lastPrePare));
+            System.out.println(
+                "ACCEPTER_" + name + "   Para proposal " + JSON.toJSONString(proposal)
+                    + "     lastPrePare proposal " + JSON.toJSONString(lastPrePare));
 
             if (proposal.getSerialId() > lastPrePare.getSerialId()) {
                 Promise response = new Promise(true, ProPosalStatus.PrePare, proposal);
                 lastPrePare = proposal;
                 Util.printInfo("ACCEPTER_" + name, "PREPARE", "OK");
+                System.out.println(
+                    "ACCEPTER_" + name + "     current proposal " + JSON.toJSONString(lastPrePare));
                 return response;
             } else {
                 Util.printInfo("ACCEPTER_" + name, "PREPARE", "REJECTED");
                 return new Promise(false, ProPosalStatus.PrePare, lastPrePare);
             }
-        }else{
+        } else {
             //已经确认某一个提议，那么就将确认的提议返回，并且保存当前最大的proposal
-            lastPrePare=proposal;
-            return new Promise(false,ProPosalStatus.Accespted, acceptedProposal);
+            lastPrePare = proposal;
+            return new Promise(false, ProPosalStatus.Accespted, acceptedProposal);
         }
     }
 
@@ -57,14 +60,14 @@ public class Acceptor {
         }*/
         if (isAccepted) {
             //如果已经确认，那么就返回已经确认的结果
-            return new Promise(false,ProPosalStatus.Accespted, acceptedProposal);
+            return new Promise(false, ProPosalStatus.Accespted, acceptedProposal);
         }
         if (lastPrePare.getSerialId() == proposal.getSerialId()) {
             //确认提议与当前保存的提议相同，那么就进行确认，
             acceptedProposal = proposal;
             isAccepted = true;
-            return new Promise(true,ProPosalStatus.Accespted, acceptedProposal);
-        }else{
+            return new Promise(true, ProPosalStatus.Accespted, acceptedProposal);
+        } else {
             return null;
         }
     }
