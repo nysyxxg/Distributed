@@ -1,5 +1,8 @@
 package com.nuaa.bean;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 /**
  * Created by wangjiuyong on 2017/7/20.
  */
@@ -63,5 +66,10 @@ public class Proposal {
     @Override
     public int hashCode(){
         return subject.hashCode()+name.hashCode()+serialId;
+    }
+
+    @Override
+    public String toString(){
+        return JSON.toJSONString(this, SerializerFeature.DisableCircularReferenceDetect);
     }
 }

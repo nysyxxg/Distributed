@@ -11,8 +11,8 @@ public class Util {
     }
 
     public  static Proposal nextProposal(Proposal proposal){
-        int serialid = proposal.getSerialId()+1;
-        return new Proposal(serialid,proposal.getSubject(),proposal.getName());
+        int serialId = proposal.getSerialId()+1;
+        return new Proposal(serialId,proposal.getSubject(),proposal.getName());
 
     }
 }
