@@ -108,18 +108,13 @@ public class Acceptor {
     }
 
     public synchronized Promise onAccept(Proposal proposal) {
-        //假设这个过程有50%的几率失败
-        /*if (Math.random() - 0.5 > 0) {
-            Util.printInfo("ACCEPTER_" + name, "PREPARE", "NO RESPONSE");
-            return false;
-        }*/
         sleepRandom();
         if (isAccepted) {
             //如果已经确认，那么就返回已经确认的结果
             return new Promise(false, ProPosalStatus.ACCESPTED, acceptedProposal);
         }
-        if (lastPrePare.getSerialId() == proposal.getSerialId()) {
-            //确认提议与当前保存的提议相同，那么就进行确认，
+        if (lastPrePare == proposal) {
+            //确认提议与当前保存的提议相同，那么就返回OK
             acceptedProposal = proposal;
             isAccepted = true;
             return new Promise(true, ProPosalStatus.ACCESPTED, acceptedProposal);

@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
  */
 public class Main {
 
-    private static  String[] PROPOSALS = {"ProjectA", "ProjectB", "ProjectC"};
+    private static String[] PROPOSALS = {"ProjectA", "ProjectB", "ProjectC"};
 
     public static void main(String[] args) {
 
@@ -22,14 +22,17 @@ public class Main {
 
         ExecutorService es = Executors.newFixedThreadPool(10);
         int round = 0;
-        while (round++ < 1) {
-            CountDownLatch latch = new CountDownLatch(3);//两个工人的协作
+        while (round++ < 10) {
+            CountDownLatch latch = new CountDownLatch(3);//3个proposer的协作
             System.out.println("    round   " + round);
             List<Acceptor> acceptors = initial();
-            initialCon(acceptors);
-            {
-                PROPOSALS =new String[] {"ProjectA"};
-            }
+
+            // 测试2个proposal分别被accepted 2次的情况
+            //initialCon(acceptors);
+
+            // 测试2个proposal分别被accepted 2次的情况,并且那两个proposal的proposer已经不再work情况的选举
+            //PROPOSALS = new String[] {"ProjectA"};
+
             int i = 1;
             for (String subject : PROPOSALS) {
                 Proposer proposer = new Proposer(latch);
@@ -40,7 +43,7 @@ public class Main {
                 es.submit(proposer);
             }
             try {
-                //等待所有工人完成工作
+                //等待所有选举完成工作
                 latch.await();
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
@@ -56,6 +59,11 @@ public class Main {
         return acceptors;
     }
 
+    /**
+     * 测试5个acceptor,已经分别accepted２个提议的情况的选举
+     *
+     * @param acceptors
+     */
     private static void initialCon(List<Acceptor> acceptors) {
         //预置条件，5个决策者中分别有两个人同时确认不同的提案
         Proposal proposal1 = new Proposal(3, "ProjectA", "proposer1");
@@ -82,11 +90,4 @@ public class Main {
         AcceptorD.setAcceptedProposal(proposal2);
         AcceptorD.setLastPrePare(proposal2);
     }
-
-    private static void initialCon2(List<Acceptor> acceptors) {
-        //预置条件，5个决策者中分别有两个人同时确认不同的提案
-        initialCon(acceptors);
-    }
-
-
 }
