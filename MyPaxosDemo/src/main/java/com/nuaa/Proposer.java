@@ -19,6 +19,7 @@ public class Proposer implements Runnable {
     private String name;
     private List<Acceptor> acceptors;
     CountDownLatch latch;
+
     Proposer(CountDownLatch latch){
         this.latch=latch;
     }
@@ -105,12 +106,12 @@ public class Proposer implements Runnable {
                                 count = ProposalCount.get(acceptedAcceptorProposal) + 1;
                             }
                             ProposalCount.put(acceptedAcceptorProposal, count);
-                        } else if (prepareResult.getProposal().getSerialId() >= proposal
+                        } /*else if (prepareResult.getProposal().getSerialId() >= proposal
                             .getSerialId()) {
                             //当前决策者的提案大于本client的提案
                             proposal.setSerialId(prepareResult.getProposal().getSerialId() + 1);
                             break;
-                        }
+                        }*/
                     }
                 }
             }
@@ -137,6 +138,7 @@ public class Proposer implements Runnable {
                 break;
             } else if (continuePrePare) {
                 //继续投票
+                generatorNextProposal(ProposalCount);
                 continue;
             }
 
@@ -158,7 +160,7 @@ public class Proposer implements Runnable {
                 proposal = Util.nextProposal(proposal);
                 continue;
             } else {
-                proposal = onAcceptSuccess.get(0).getAcceptedProposal();
+           //     proposal = onAcceptSuccess.get(0).getAcceptedProposal();
                 break;
             }
         }
@@ -166,6 +168,30 @@ public class Proposer implements Runnable {
         System.out.println(
             "Thread Name" + Thread.currentThread().getName() + " " + name + " " + proposal.getSubject() + " has accepted ");
         latch.countDown();
+    }
+
+    private void generatorNextProposal(HashMap<Proposal, Integer> ProposalCount){
+        if(ProposalCount.isEmpty()){
+            //将序列增加1
+            proposal.setSerialId(proposal.getSerialId()+1);
+        }else{
+            System.out.println(
+                "Thread Name" + Thread.currentThread().getName() + "  generator from accepted proposal ");
+            List<Proposal> proposals=new ArrayList<>();
+            for (Map.Entry<Proposal, Integer> entry : ProposalCount.entrySet()) {
+                if(!proposals.contains(entry.getKey())) {
+                    proposals.add(entry.getKey());
+                }
+            }
+            Collections.sort(proposals);
+            Proposal maxVote = proposals.get(proposals.size() - 1);
+            int serialId = maxVote.getSerialId();
+            String name = maxVote.getName();
+            String subject = maxVote.getSubject();
+            proposal.setSerialId(serialId+1);
+            proposal.setName(name);
+            proposal.setSubject(subject);
+        }
     }
 
     @Override

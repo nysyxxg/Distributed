@@ -6,7 +6,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 /**
  * Created by wangjiuyong on 2017/7/20.
  */
-public class Proposal {
+public class Proposal implements Comparable<Proposal>{
 
     private String subject;
 
@@ -66,6 +66,11 @@ public class Proposal {
     @Override
     public int hashCode(){
         return subject.hashCode()+name.hashCode()+serialId;
+    }
+
+    @Override
+    public int compareTo(Proposal o) {
+        return Long.compare(serialId, o.serialId);
     }
 
     @Override

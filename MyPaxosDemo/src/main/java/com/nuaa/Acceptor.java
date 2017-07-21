@@ -7,8 +7,6 @@ import com.nuaa.bean.Promise;
 import com.nuaa.bean.Proposal;
 import org.apache.commons.lang3.RandomUtils;
 
-import static org.apache.commons.lang3.RandomUtils.nextInt;
-
 /**
  * Created by wangjiuyong on 2017/7/20.
  */
@@ -102,7 +100,7 @@ public class Acceptor {
                 }
             } else {
                 //当前已经确认的提案与当前的提案不是来自同一个人
-                // 那么就将确认的提议返回，并且保存当前最大的proposal
+                //那么就将确认的提议返回，并且保存当前最大的proposal
                 lastPrePare = proposal;
                 return new Promise(false, ProPosalStatus.ACCESPTED, acceptedProposal);
             }
