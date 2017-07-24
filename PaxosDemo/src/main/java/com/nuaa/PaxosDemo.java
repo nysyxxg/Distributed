@@ -1,5 +1,6 @@
 package com.nuaa;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -110,7 +111,7 @@ public final class PaxosDemo {
             if (proposal.getVoteNumber() > last.getVoteNumber()) {
                 Promise response = new Promise(true, last);
                 last = proposal;
-                printInfo("ACCEPTER_" + name, "PREPARE", "OK");
+                printInfo("ACCEPTER_" + name, "PREPARE"+ JSON.toJSONString(last), "OK");
                 return response;
             } else {
                 printInfo("ACCEPTER_" + name, "PREPARE", "REJECTED");
@@ -150,11 +151,19 @@ public final class PaxosDemo {
 
     private static class Proposal implements Comparable<Proposal> {
 
-        private final long voteNumber;
-        private final String content;
+        private long voteNumber;
+        private String content;
 
         public Proposal(long voteNumber, String content) {
             this.voteNumber = voteNumber;
+            this.content = content;
+        }
+
+        public void setVoteNumber(long voteNumber) {
+            this.voteNumber = voteNumber;
+        }
+
+        public void setContent(String content) {
             this.content = content;
         }
 
@@ -203,6 +212,8 @@ public final class PaxosDemo {
                 .append(content)
                 .toString();
         }
+
+
     }
 
 }

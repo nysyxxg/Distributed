@@ -70,6 +70,7 @@ public class Acceptor {
         if (!isAccepted) {
             //当前没有确认
             if (proposal.getSerialId() > lastPrePare.getSerialId()) {
+                //本次提交的议题的serialID大于保存中的serialID，那么就替换掉
                 Promise response = new Promise(true, ProPosalStatus.PREPARE, proposal);
                 lastPrePare = proposal;
                 Util.printInfo(
@@ -80,6 +81,7 @@ public class Acceptor {
                         + "     current proposal " + lastPrePare);
                 return response;
             } else {
+                //返回保存的最大号的议题
                 Util.printInfo(
                     "Thread Name" + Thread.currentThread().getName() + " " + "ACCEPTER_" + name,
                     "PREPARE", "REJECTED");
@@ -88,7 +90,7 @@ public class Acceptor {
         } else {
             //已经确认某一个提议，
             if (acceptedProposal.getName().equals(proposal.getName())) {
-                //表示来自同一个Proposer的相同的Proposal
+                //表示是同一个议题的不同serialID的提交
                 if (acceptedProposal.getSerialId() < proposal.getSerialId()) {
                     //表示已经确认的提案的提交人已经有的更新，那么就去除已经确认，重新设置状态为PrePare
                     isAccepted = false;

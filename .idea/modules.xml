@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Distributed.iml" filepath="$PROJECT_DIR$/.idea/Distributed.iml" />
       <module fileurl="file://$PROJECT_DIR$/MyPaxosDemo/MyPaxosDemo.iml" filepath="$PROJECT_DIR$/MyPaxosDemo/MyPaxosDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PaxosDemo/PaxosDemo.iml" filepath="$PROJECT_DIR$/PaxosDemo/PaxosDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Raftjava/Raftjava.iml" filepath="$PROJECT_DIR$/Raftjava/Raftjava.iml" />
     </modules>
   </component>
 </project>

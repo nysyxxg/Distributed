@@ -7,10 +7,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="MyPaxosDemo" />
+        <module name="PaxosDemo" />
+        <module name="Raftjava" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="MyPaxosDemo" target="1.8" />
+      <module name="PaxosDemo" target="1.8" />
+      <module name="Raftjava" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
