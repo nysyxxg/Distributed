@@ -31,14 +31,18 @@ public class Main {
         node3.setNodeId("3");
         node3.setNodeName("node3");
         Thread t3=new Thread(node3);
-        t3.setName("node2");
+        t3.setName("node3");
 
         nodeSets.add(node1);
         nodeSets.add(node2);
         node1.addNode(node2);
+        node1.addNode(node3);
+        node2.addNode(node3);
         ExecutorService es = Executors.newCachedThreadPool();
         t1.start();
         t2.start();
+        t3.start();
+
 /*        es.submit(t1);
         es.submit(t2);*/
         /*node1.addNode(node3);

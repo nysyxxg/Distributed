@@ -132,6 +132,9 @@ public class Node implements Runnable {
                     timerThread.interrupt();
                     voteRunnable = new RPCRunnable(this, Message.BECOME_LEADER);
                     es.submit(voteRunnable);
+                    HeartBeatRunnable heartBeatRunnable = new HeartBeatRunnable(this,Message.HEARTBEAT);
+                    Thread t=new Thread(heartBeatRunnable);
+                    t.start();
                 }
             }
         } catch (InterruptedException e) {

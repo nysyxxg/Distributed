@@ -29,7 +29,7 @@ public class TimerRunnable implements Runnable {
                 int time = timeHeartbeat;
                 if(node.getNodeStatus()==NodeStatus.CANDIDATE) {
                     //处于Leader选举状态
-                    time = RandomUtils.nextInt(1, 10);
+                    time = RandomUtils.nextInt(1, 100000)%10+3;
                 }
                 System.out.println(Thread.currentThread().getName()+"   await  " + time);
                 boolean result = heartBeatCondition.await(time, TimeUnit.SECONDS);
