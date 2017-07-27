@@ -1,5 +1,7 @@
 package com.nuaa.protocol.raft;
 
+import com.alibaba.fastjson.JSON;
+
 /**
  * @author Bela Ban
  * @since 0.1
@@ -30,7 +32,6 @@ public class VoteRequest extends RaftHeader {
     }
 
     public String toString() {
-        return super.toString() + ", last_log_term=" + last_log_term + ", last_log_index="
-            + last_log_index;
+        return JSON.toJSONString(this);
     }
 }

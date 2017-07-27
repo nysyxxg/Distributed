@@ -1,5 +1,7 @@
 package com.nuaa.protocol.raft;
 
+import com.alibaba.fastjson.JSON;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 
@@ -23,6 +25,6 @@ public class VoteResponse extends RaftHeader {
     public VoteResponse(int term, boolean result) {super(term); this.result=result;}
 
     public String toString() {
-        return super.toString() + ", result=" + result;
+        return JSON.toJSONString(this);
     }
 }

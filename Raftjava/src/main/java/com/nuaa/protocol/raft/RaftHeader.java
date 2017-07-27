@@ -26,6 +26,4 @@ public abstract class RaftHeader {
     public void setCandidateId(int candidateId) {
         this.candidateId = candidateId;
     }
-
-    public String toString() {return getClass().getSimpleName() + ": term=" + term;}
 }

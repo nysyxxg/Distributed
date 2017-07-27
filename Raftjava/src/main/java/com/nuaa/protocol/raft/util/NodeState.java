@@ -126,6 +126,8 @@ public class NodeState {
         this.commitLogTerm = commitLogTerm;
     }
 
+
+
     public static class NodeAppliedIndexInfo {
         private int nextIndex;
         private int matchedIdex;

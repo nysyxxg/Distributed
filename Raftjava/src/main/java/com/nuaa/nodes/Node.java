@@ -1,129 +1,56 @@
 package com.nuaa.nodes;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.nuaa.protocol.raft.*;
+import com.nuaa.protocol.raft.util.LogUtil;
 import com.nuaa.protocol.raft.util.NodeState;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Created by wangjiuyong on 2017/7/24.
  */
 public class Node implements Runnable {
-    //节点状态
-    private Phase phase;
+    //节点状态机的现态，初始现态都是FOLLOWER
+    private NodeStateRole nodeRole = NodeStateRole.FOLLOWER;
+    //节点状态机的动作
+    private NodeStateAction nodeStateAction;
     //节点名称
     private String nodeName;
     //节点ID号
     private int nodeId;
     //所有的节点集合
     public Set<Node> nodeSets = new HashSet<>();
-    //节点角色
-    private NodeRole nodeStatus = NodeRole.FOLLOWER;
     //定时器
     private TimerMachine timerMachine;
     private Thread timerMachineThread;
     //投票数目
     private int voteCount = 0;
     private ExecutorService es = Executors.newCachedThreadPool();
-
-
+    private RPCSendRequest rpcSendRequest;
+    private RPCReceiveRequest rpcReceiveRequest;
     protected NodeState nodeState;
+    private VoteStatic voteStatic = new VoteStatic();
 
-
-    public NodeState getNodeState() {
-        return nodeState;
-    }
-
-    public void setNodeState(NodeState nodeState) {
-        this.nodeState = nodeState;
-    }
-
-    public NodeRole getNodeStatus() {
-        return nodeStatus;
-    }
-
-    public void setNodeStatus(NodeRole nodeStatus) {
-        this.nodeStatus = nodeStatus;
-    }
-
-    public int getVoteCount() {
-        return voteCount;
-    }
-
-    public void setVoteCount(int voteCount) {
-        this.voteCount = voteCount;
-    }
-
-    public String getNodeName() {
-        return nodeName;
-    }
-
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
-    }
-
-    public int getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(int nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public Set<Node> getNodeSets() {
-        return nodeSets;
-    }
 
 
     public Node() {
         ExecutorService es = Executors.newCachedThreadPool();
-        phase = Phase.INITIAL;
+        rpcSendRequest = new RPCSendRequest(this);
+        rpcReceiveRequest = new RPCReceiveRequest(this);
+        es.submit(rpcSendRequest);
+        es.submit(rpcReceiveRequest);
+        nodeStateAction = NodeStateAction.START_FOLLOWER;
         nodeState = new NodeState();
-    }
-
-    public Phase getPhase() {
-        return phase;
-    }
-
-    public void setPhase(Phase phase) {
-        this.phase = phase;
     }
 
     public void addNode(Node node) {
         this.nodeSets.add(node);
         node.getNodeSets().add(this);
-    }
-
-    public RaftHeader handlerRPCMessage(RaftHeader message) {
-        System.out.println(this + "   receive  " + message);
-        timerMachine.receiveHeartBeat(message);
-        if (message instanceof VoteRequest) {
-            VoteRequest VoteRequest = (VoteRequest) message;
-            NodeState.LogEntry localLogEntry = nodeState.getlastLogEntry();
-            if (VoteRequest.getCandidateId() == nodeId) {
-                //如果是相同的节点，则表示成功
-                return new VoteResponse(nodeState.getCurrentTerm(), true);
-            } else {
-                if (localLogEntry.getTerm() > VoteRequest.getLast_log_term()) {
-                    //如果本节点的term大于消息中包含的term,则返回false
-                    return new VoteResponse(nodeState.getCurrentTerm(), false);
-                } else if (localLogEntry.getTerm() == VoteRequest.getLast_log_term()
-                    && localLogEntry.getIndex() > VoteRequest.getLast_log_index()) {
-                    //如果term相同，本节点的index大于消息中的inex,返回false
-                    return new VoteResponse(nodeState.getCurrentTerm(), false);
-                } else {
-                    //如果本节点的term和index都不大于消息中包含的信息，那么就返回true
-                    nodeState.setVoteFor(message.getCandidateId());
-                    return new VoteResponse(nodeState.getCurrentTerm(), true);
-                }
-            }
-        }
-        return null;
     }
 
     @Override public boolean equals(Object o) {
@@ -147,32 +74,34 @@ public class Node implements Runnable {
     }
 
     public String toString() {
-        return nodeName + "   " + nodeId;
+        return nodeName+" ";
     }
 
-    public void handleCandidateTimeOut() {
-        System.out.println(this + "   handleTimeOut ");
-        nodeStatus = NodeRole.CANDIDATE;
-        VoteRequest VoteRequest = buildVoteRequest();
-        RPCRunnable voteRunnable = new RPCRunnable(this, VoteRequest);
-        Future<VoteStatic> future = es.submit(voteRunnable);
-        try {
-            VoteStatic voteStatic= future.get();
-            System.out.println(voteRunnable);
-            if (voteStatic.getSuccessCount()+1> nodeSets.size()) {
-                nodeState.setCurrentTerm(voteStatic.getMaxTerm()+1);
-                System.out.println(this + "   become the leader "+ JSON.toJSONString(nodeState));
+
+
+    public void handleEvent(NodeStateEvent event) {
+        LogUtil.log(this +" handleEvent "+event);
+        if (event == NodeStateEvent.TIMEOUT) {
+            if (nodeRole == NodeStateRole.CANDIDATE) {
+                //选举超时事件，发送选举事件
+                VoteRequest requestMessage = buildVoteRequest();
+                rpcSendRequest.addMessage(requestMessage);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else if (event == NodeStateEvent.BROADCASTLEADER) {
+            //节点已经成为leader节点的事件
+            if (nodeRole == NodeStateRole.LEADER) {
+                LogUtil.log(this +" become the leader");
+                nodeRole = NodeStateRole.LEADER;
+                LogUtil.log(this +" buildHeartRequest ");
+                AppendEntriesRequest requestMessage = buildHeartRequest();
+                rpcSendRequest.addMessage(requestMessage);
+            }
+        }else if (event == NodeStateEvent.BROADCASTHEART) {
+            //节点已经成为leader节点的事件
+            LogUtil.log(this +" BROADCASTHEART ");
+            AppendEntriesRequest requestMessage = buildHeartRequest();
+            rpcSendRequest.addMessage(requestMessage);
         }
-    }
-
-    public void sendAppendEntriesRequest() {
-        System.out.println(this + "   handleTimeOut ");
-        nodeStatus = NodeRole.CANDIDATE;
-        AppendEntriesRequest appendEntriesRequest = buildHeartRequest();
-        RPCRunnable voteRunnable = new RPCRunnable(this, appendEntriesRequest);
     }
 
     private VoteRequest buildVoteRequest() {
@@ -200,9 +129,9 @@ public class Node implements Runnable {
     }
 
     @Override public void run() {
-        System.out.println(this);
-        if ((nodeStatus == NodeRole.FOLLOWER)) {
-            nodeStatus = NodeRole.CANDIDATE;
+        LogUtil.log(this);
+        if ((nodeRole == NodeStateRole.FOLLOWER)) {
+            nodeRole = NodeStateRole.CANDIDATE;
             if (nodeSets.size() > 0) {
                 //开始选举过程
                 timerMachine = new TimerMachine(this);
@@ -211,5 +140,115 @@ public class Node implements Runnable {
                 timerMachineThread.start();
             }
         }
+    }
+
+
+
+    public NodeStateAction getNodeStateAction() {
+        return nodeStateAction;
+    }
+
+    public void setNodeStateAction(NodeStateAction nodeStateAction) {
+        this.nodeStateAction = nodeStateAction;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
+    public int getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(int nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public Set<Node> getNodeSets() {
+        return nodeSets;
+    }
+
+    public void setNodeSets(Set<Node> nodeSets) {
+        this.nodeSets = nodeSets;
+    }
+
+    public NodeStateRole getNodeRole() {
+        return nodeRole;
+    }
+
+    public void setNodeRole(NodeStateRole nodeRole) {
+        this.nodeRole = nodeRole;
+    }
+
+    public TimerMachine getTimerMachine() {
+        return timerMachine;
+    }
+
+    public void setTimerMachine(TimerMachine timerMachine) {
+        this.timerMachine = timerMachine;
+    }
+
+    public Thread getTimerMachineThread() {
+        return timerMachineThread;
+    }
+
+    public void setTimerMachineThread(Thread timerMachineThread) {
+        this.timerMachineThread = timerMachineThread;
+    }
+
+    public int getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(int voteCount) {
+        this.voteCount = voteCount;
+    }
+
+    public ExecutorService getEs() {
+        return es;
+    }
+
+    public void setEs(ExecutorService es) {
+        this.es = es;
+    }
+
+    public RPCSendRequest getRpcSendRequest() {
+        return rpcSendRequest;
+    }
+
+    public void setRpcSendRequest(RPCSendRequest rpcSendRequest) {
+        this.rpcSendRequest = rpcSendRequest;
+    }
+
+    public NodeState getNodeState() {
+        return nodeState;
+    }
+
+    public void setNodeState(NodeState nodeState) {
+        this.nodeState = nodeState;
+    }
+
+    public RPCReceiveRequest getRpcReceiveRequest() {
+        return rpcReceiveRequest;
+    }
+
+    public void setRpcReceiveRequest(RPCReceiveRequest rpcReceiveRequest) {
+        this.rpcReceiveRequest = rpcReceiveRequest;
+    }
+
+    public VoteStatic getVoteStatic() {
+        return voteStatic;
+    }
+
+    public void setVoteStatic(VoteStatic voteStatic) {
+        this.voteStatic = voteStatic;
+    }
+
+    public String info(){
+        return nodeName+JSON.toJSONString(nodeRole)+JSON.toJSONString(nodeStateAction)+JSON.toJSONString(nodeState)+JSON.toJSONString(voteStatic);
     }
 }
